@@ -17,12 +17,11 @@ app.use(express.json());
 app.use('/exercises', exerciseRoutes);
 app.use('/workouts', workoutRoutes);
 
-// Route pour ajouter un nouvel entraînement
+// 📌 Route pour ajouter un nouvel entraînement
 app.post('/api/workouts', async (req, res) => {
   try {
     const { name, category, exercise, reps, sets, weight, date } = req.body;
 
-    // Vérification que le champ "name" est bien présent
     if (!name) {
       return res.status(400).json({ message: 'Le champ "name" est obligatoire.' });
     }
@@ -42,6 +41,34 @@ app.post('/api/workouts', async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement du workout:', error);
     res.status(500).json({ message: 'Erreur lors de l\'enregistrement du workout', error });
+  }
+});
+
+// 📌 Route pour récupérer tous les entraînements
+app.get('/api/workouts', async (req, res) => {
+  try {
+    const workouts = await Workout.find(); // Récupérer tous les workouts
+    res.status(200).json(workouts);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des workouts:', error);
+    res.status(500).json({ message: 'Erreur lors de la récupération des workouts', error });
+  }
+});
+
+// 📌 Route pour supprimer un entraînement par ID
+app.delete('/api/workouts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedWorkout = await Workout.findByIdAndDelete(id);
+
+    if (!deletedWorkout) {
+      return res.status(404).json({ message: 'Workout non trouvé.' });
+    }
+
+    res.status(200).json({ message: 'Workout supprimé avec succès', deletedWorkout });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du workout:', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression du workout', error });
   }
 });
 
