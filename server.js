@@ -25,7 +25,7 @@ app.post('/api/workouts', async (req, res) => {
 
     const newWorkout = new Workout({
       name: name.trim(),
-      category,
+      category, 
       exercise,
       reps: Number(reps) || 0,
       sets: Number(sets) || 0,
