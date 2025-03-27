@@ -1,16 +1,23 @@
-const Workout = require('../models/workoutModel'); 
+const Workout = require('../models/workoutModel');
 
 // Create a workout
 const createWorkout = async (req, res) => {
-  const { exercise, reps, sets, weight, date } = req.body;
+  const { name, category, exercise, reps, sets, weight, date } = req.body;
 
   try {
+    // Ensure 'name' is provided
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+
     const newWorkout = new Workout({
+      name, 
+      category,
       exercise,
       reps,
       sets,
       weight,
-      date
+      date,
     });
 
     await newWorkout.save();
@@ -32,17 +39,15 @@ const getWorkouts = async (req, res) => {
 
 // Update a workout by ID
 const updateWorkout = async (req, res) => {
-  const { exercise, reps, sets, weight, date } = req.body;
+  const { name, category, exercise, reps, sets, weight, date } = req.body;
 
   try {
-    // Find the workout by ID and update it
     const updatedWorkout = await Workout.findByIdAndUpdate(
       req.params.id,
-      { exercise, reps, sets, weight, date },
-      { new: true } // Return the updated workout
+      { name, category, exercise, reps, sets, weight, date },
+      { new: true }  // Return the updated workout
     );
 
-    // If no workout is found
     if (!updatedWorkout) {
       return res.status(404).json({ message: 'Workout log not found' });
     }
