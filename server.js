@@ -4,20 +4,18 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const exerciseRoutes = require('./routes/exerciseRoutes');
 const workoutRoutes = require('./routes/workoutRoutes');
-const Workout = require('./models/Workout'); // Import du modèle Workout
+const Workout = require('./models/Workout'); 
 
 dotenv.config();
-connectDB();  // Connexion à MongoDB
+connectDB();  
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Définition des routes
 app.use('/exercises', exerciseRoutes);
 app.use('/workouts', workoutRoutes);
 
-// 📌 Route pour ajouter un nouvel entraînement
 app.post('/api/workouts', async (req, res) => {
   try {
     const { name, category, exercise, reps, sets, weight, date } = req.body;
@@ -44,10 +42,9 @@ app.post('/api/workouts', async (req, res) => {
   }
 });
 
-// 📌 Route pour récupérer tous les entraînements
 app.get('/api/workouts', async (req, res) => {
   try {
-    const workouts = await Workout.find(); // Récupérer tous les workouts
+    const workouts = await Workout.find(); 
     res.status(200).json(workouts);
   } catch (error) {
     console.error('Erreur lors de la récupération des workouts:', error);
@@ -55,7 +52,6 @@ app.get('/api/workouts', async (req, res) => {
   }
 });
 
-// 📌 Route pour supprimer un entraînement par ID
 app.delete('/api/workouts/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -72,6 +68,5 @@ app.delete('/api/workouts/:id', async (req, res) => {
   }
 });
 
-// Lancement du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Serveur en cours d'exécution sur le port ${PORT}`));
