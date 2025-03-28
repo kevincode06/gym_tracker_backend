@@ -1,24 +1,51 @@
-// Controller function to format date 
+const mongoose = require('mongoose');
+
+// Workout Model
+const workoutSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  exercise: { type: String, required: true },
+  reps: { type: Number, required: true },
+  sets: { type: Number, required: true },
+  weight: { type: Number, required: true },
+  date: { 
+    type: Date, 
+    required: true,
+    default: () => new Date(),
+    set: function(val) {
+      if (typeof val === 'string') {
+        const parsedDate = new Date(val);
+        return isNaN(parsedDate) ? new Date() : parsedDate;
+      }
+      return val instanceof Date ? val : new Date(val);
+    }
+  }
+});
+
+const Workout = mongoose.model('Workout', workoutSchema);
+
+// Controller Functions
 const formatDateToYYYYMMDD = (date) => {
   if (!date) return null;
   const d = new Date(date);
-  return d.toISOString().split('T')[0]; 
+  return d.toISOString().split('T')[0];
 };
 
-// Controller function to create a new workout entry
 const createWorkout = async (req, res) => {
   try {
     const { name, category, exercise, reps, sets, weight, date } = req.body;
 
-    // Validate required fields: name, category, and exercise
     if (!name || !category || !exercise) {
       return res.status(400).json({
         message: 'Name, category, and exercise are required',
-        missingFields: { name: !name, category: !category, exercise: !exercise }
+        missingFields: {
+          name: !name,
+          category: !category,
+          exercise: !exercise
+        }
       });
     }
 
-    // Create a new workout instance
     const newWorkout = new Workout({
       name: name.trim(),
       category,
@@ -29,19 +56,15 @@ const createWorkout = async (req, res) => {
       date: date || new Date()
     });
 
-    // Save the workout to the database
     await newWorkout.save();
 
-    // Format date before sending it in the response
     const responseWorkout = newWorkout.toObject();
     responseWorkout.date = formatDateToYYYYMMDD(newWorkout.date);
 
-    // Respond with the newly created workout
     res.status(201).json(responseWorkout);
   } catch (error) {
     console.error('Workout creation error:', error);
 
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         message: 'Validation error',
@@ -49,7 +72,6 @@ const createWorkout = async (req, res) => {
       });
     }
 
-    // Handle generic error
     res.status(500).json({
       message: 'Error creating workout',
       error: error.message
@@ -57,19 +79,16 @@ const createWorkout = async (req, res) => {
   }
 };
 
-// Controller function to get all workouts
 const getWorkouts = async (req, res) => {
   try {
     const workouts = await Workout.find().sort({ date: -1 });
-
-    // Format the date before sending it in the response
+    
     const formattedWorkouts = workouts.map(workout => {
       const workoutObj = workout.toObject();
       workoutObj.date = formatDateToYYYYMMDD(workout.date);
       return workoutObj;
     });
 
-    // Respond with the list of workouts
     res.status(200).json(formattedWorkouts);
   } catch (error) {
     console.error('Fetch workouts error:', error);
@@ -80,20 +99,21 @@ const getWorkouts = async (req, res) => {
   }
 };
 
-// Controller function to update an existing workout
 const updateWorkout = async (req, res) => {
   try {
     const { name, category, exercise, reps, sets, weight, date } = req.body;
 
-    // Validate required fields
     if (!name || !category || !exercise) {
       return res.status(400).json({
         message: 'Name, category, and exercise are required',
-        missingFields: { name: !name, category: !category, exercise: !exercise }
+        missingFields: {
+          name: !name,
+          category: !category,
+          exercise: !exercise
+        }
       });
     }
 
-    // Update the workout by its ID
     const updatedWorkout = await Workout.findByIdAndUpdate(
       req.params.id,
       {
@@ -106,8 +126,8 @@ const updateWorkout = async (req, res) => {
         date: date || new Date()
       },
       {
-        new: true, // Return the updated document
-        runValidators: true // Ensure validation is triggered
+        new: true,
+        runValidators: true
       }
     );
 
@@ -115,7 +135,6 @@ const updateWorkout = async (req, res) => {
       return res.status(404).json({ message: 'Workout not found' });
     }
 
-    // Format date before sending it in the response
     const responseWorkout = updatedWorkout.toObject();
     responseWorkout.date = formatDateToYYYYMMDD(updatedWorkout.date);
 
@@ -137,7 +156,6 @@ const updateWorkout = async (req, res) => {
   }
 };
 
-// Controller function to delete a workout by ID
 const deleteWorkout = async (req, res) => {
   try {
     const workout = await Workout.findByIdAndDelete(req.params.id);
@@ -146,7 +164,6 @@ const deleteWorkout = async (req, res) => {
       return res.status(404).json({ message: 'Workout not found' });
     }
 
-    // Respond with success message
     res.status(200).json({
       message: 'Workout deleted successfully',
       deletedWorkout: workout
@@ -160,5 +177,4 @@ const deleteWorkout = async (req, res) => {
   }
 };
 
-// Export all controller functions for use in routes
 module.exports = { createWorkout, getWorkouts, updateWorkout, deleteWorkout };
